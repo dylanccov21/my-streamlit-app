@@ -1,0 +1,61 @@
+Script run at 2025-02-21 13:32:05.160846 | Sheet: Gap Analysis - EMEA CE Mat Grp | CR Sum: 10,290,039.69
+Script run at 2025-02-21 13:32:10.507363 | Sheet: Gap Analysis - NA CE Mat Grp | CR Sum: 16,370,094.98
+Script run at 2025-02-21 13:40:30.148655 | Sheet: Gap Analysis - EMEA CE Mat Grp | Total Sum (EUR): 10,290,039.69
+Script run at 2025-02-21 13:40:38.861727 | Sheet: Gap Analysis - NA CE Mat Grp | Total Sum (EUR): 16,370,094.98
+Script run at 2025-02-21 13:41:20.831890 | Sheet: Gap Analysis - NA CE Mat Grp | Total Sum (EUR): 1,017,614.27
+Script run at 2025-02-21 13:45:03.463229 | Sheet: Gap Analysis - EMEA CE Mat Grp | Total Sum (EUR): 10,290,039.69
+Script run at 2025-02-21 13:45:10.050623 | Sheet: Gap Analysis - NA CE Mat Grp | Total Sum (EUR): 16,370,094.98
+Script run at 2025-02-21 13:49:08.410225 | Sheet: Gap Analysis - EMEA CE Mat Grp | Year: Year: 2024 | Total Sum (EUR): 10,290,039.69
+Script run at 2025-02-21 13:49:19.002814 | Sheet: Gap Analysis - NA CE Mat Grp | Year: Year: 2024 | Total Sum (EUR): 16,370,094.98
+Script run at 2025-02-21 13:59:16.543845 | Sheet: EMEA | Year: Year: 2024 | Total Sum (EUR): 10,290,039.69
+Script run at 2025-02-21 13:59:21.541030 | Sheet: NA | Year: Year: 2024 | Total Sum (EUR): 16,370,094.98
+Script run at 2025-02-21 14:02:04.248274 | Sheet: NA | Year: Year: 2024 | Total Sum (EUR): 1,851,180.15
+Script run at 2025-02-21 14:15:39.971967 | Sheet: EMEA | Year: Year: 2024 | Total Sum (EUR): 10,290,039.69
+Script run at 2025-02-21 14:15:45.808362 | Sheet: NA | Year: Year: 2024 | Total Sum (EUR): 16,370,094.98
+Script run at 2025-02-21 14:29:50.065703 | Sheet: EMEA | Year: Year: 2024 | Total Sum (EUR): 10,290,039.69
+Script run at 2025-02-21 14:29:53.948194 | Sheet: NA | Year: Year: 2024 | Total Sum (EUR): 16,370,094.98
+Script run at 2025-02-21 15:18:52.680782 | Sheet: EMEA | Year: Year: 2024 | Total Sum (EUR): 0.00
+Script run at 2025-02-21 15:19:04.442792 | Sheet: NA | Year: Year: 2024 | Total Sum (EUR): 0.00
+Script run at 2025-02-21 15:19:27.769520 | Sheet: EMEA | Year: Year: 2024 | Total Sum (EUR): 0.00
+Script run at 2025-02-21 15:19:33.563024 | Sheet: NA | Year: Year: 2024 | Total Sum (EUR): 0.00
+Script run at 2025-02-21 15:19:53.405109 | Sheet: NA | Year: Year: 2024 | Total Sum (EUR): 0.00
+Script run at 2025-02-21 15:20:30.306373 | Sheet: EMEA | Year: Year: 2024 | Total Sum (EUR): 0.00
+Script run at 2025-02-21 15:25:48.872372 | Sheet: NA | Year: Year: 2024 | Total Sum (EUR): 0.00
+Script run at 2025-02-21 15:26:08.441619 | Sheet: NA | Year: Year: 2024 | Total Sum (EUR): 0.00
+Script run at 2025-02-21 15:27:14.787927 | Sheet: NA | Year: Year: 2024 | Total Sum (EUR): 0.00
+Script run at 2025-02-21 15:27:22.009772 | Sheet: NA | Year: Year: 2024 | Total Sum (EUR): 0.00
+Script run at 2025-02-21 15:29:45.349873 | Sheet: EMEA | Year: Year: 2024 | Total Sum (EUR): 0.00
+Script run at 2025-02-21 15:29:53.198103 | Sheet: NA | Year: Year: 2024 | Total Sum (EUR): 0.00
+Script run at 2025-02-21 15:33:09.131568 | Sheet: EMEA | Year: Year: 2024 | Total Sum (EUR): 0.00
+Script run at 2025-02-21 15:33:18.200994 | Sheet: NA | Year: Year: 2024 | Total Sum (EUR): 0.00
+Script run at 2025-02-21 15:41:58.017738 | Sheet: EMEA | Total Sum (EUR): 0.00
+Script run at 2025-02-21 15:42:06.415093 | Sheet: NA | Total Sum (EUR): 0.00
+Script run at 2025-02-21 15:47:10.556806 | Sheet: EMEA | Total Sum (EUR): 0.00
+Script run at 2025-02-21 15:48:45.839804 | Sheet: NA | Total Sum (EUR): 0.00
+Script run at 2025-02-21 15:55:44.771520 | Sheet: NA | Total Sum (EUR): 0.00
+Script run at 2025-02-21 15:57:15.389085 | Sheet: EMEA | Total Sum (EUR): 10,290,039.69
+Script run at 2025-02-21 15:57:24.330036 | Sheet: NA | Total Sum (EUR): 16,370,094.98
+Script run at 2025-02-21 15:59:48.583750 | Sheet: EMEA | Total Sum (EUR): 10,290,039.69
+Script run at 2025-02-21 15:59:53.046635 | Sheet: NA | Total Sum (EUR): 16,370,094.98
+Script run at 2025-02-21 16:14:38.969366 | Sheet: EMEA | Total Sum (EUR): 10,290,039.69
+Script run at 2025-02-21 16:14:48.037433 | Sheet: NA | Total Sum (EUR): 16,370,094.98
+Script run at 2025-02-21 16:17:56.904314 | Sheet: EMEA | Total Sum (EUR): 10,290,039.69
+Script run at 2025-02-21 16:18:05.282189 | Sheet: NA | Total Sum (EUR): 16,370,094.98
+Script run at 2025-02-21 16:18:29.422806 | Sheet: NA | Total Sum (EUR): 5,136,115.82
+Script run at 2025-02-24 11:07:59.602563 | Sheet: EMEA | Total Sum (EUR): 10,290,039.69
+Script run at 2025-02-24 11:08:59.535434 | Sheet: NA | Total Sum (EUR): 16,370,094.98
+Script run at 2025-02-24 11:20:52.705051 | Sheet: NA | Total Sum (EUR): 5,136,115.82
+Script run at 2025-02-25 10:23:42.988265 | Sheet: EMEA | Total Sum (EUR): 10,290,039.69
+Script run at 2025-02-25 10:23:45.976072 | Sheet: NA | Total Sum (EUR): 16,370,094.98
+Script run at 2025-02-25 10:24:34.369502 | Sheet: NA | Total Sum (EUR): 5,136,115.82
+Script run at 2025-02-25 17:17:45.378518 | Sheet: EMEA | Total Sum (EUR): 10,290,039.69
+Script run at 2025-02-25 17:17:48.251735 | Sheet: NA | Total Sum (EUR): 16,370,094.98
+Script run at 2025-02-26 09:11:51.662753 | Sheet: EMEA | Total Sum (EUR): 10,290,039.69
+Script run at 2025-02-26 09:12:19.565495 | Sheet: NA | Total Sum (EUR): 16,370,094.98
+Script run at 2025-02-26 09:13:25.564581 | Sheet: NA | Total Sum (EUR): 5,136,115.82
+Script run at 2025-02-26 09:13:47.792039 | Sheet: NA | Total Sum (EUR): 0.00
+Script run at 2025-02-26 09:13:55.521945 | Sheet: NA | Total Sum (EUR): 1,017,614.27
+Script run at 2025-02-26 09:14:11.890342 | Sheet: NA | Total Sum (EUR): 16,370,094.98
+Script run at 2025-02-26 09:14:14.784379 | Sheet: NA | Total Sum (EUR): 5,136,115.82
+Script run at 2025-02-26 09:16:38.664558 | Sheet: NA | Total Sum (EUR): 2,677,033.44
+Script run at 2025-02-26 09:17:27.194241 | Sheet: NA | Total Sum (EUR): 5,136,115.82

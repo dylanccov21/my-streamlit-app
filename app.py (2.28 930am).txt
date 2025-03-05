@@ -1,0 +1,209 @@
+import streamlit as st
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+st.sidebar.title("Navigation")
+page = st.sidebar.radio("Go to", ["Home", "Storage & Handling", "Freight"])
+
+# ✅ Declare file uploader first to avoid NameError
+uploaded_file = st.sidebar.file_uploader("Upload an Excel file", type=["xlsx", "xls"])
+
+if uploaded_file:
+    try:
+        # Load Excel file
+        xls = pd.ExcelFile(uploaded_file)
+        sheet_names = xls.sheet_names
+
+        # Exclude "GSC - Freight" from "Storage & Handling" selection
+        excluded_sheets = ["GSC - Freight"]
+        available_sheets = [sheet for sheet in sheet_names if sheet not in excluded_sheets]
+
+        # Select a valid sheet on "Storage & Handling" page
+        if not available_sheets:
+            st.error("No valid sheets available. Please upload an Excel file with the correct format.")
+            st.stop()
+
+        selected_sheet = st.sidebar.selectbox("Select a sheet", available_sheets)
+
+    except Exception as e:
+        st.sidebar.error(f"Error loading file: {e}")
+        st.stop()
+
+# ✅ Page 1: Home (Blank Slate for Images & Visuals)
+if page == "Home":
+    st.title("Home")
+    st.subheader("Welcome to the SCCT4.0 Dashboard")
+    st.write("This page is currently blank. You can add images, visuals, or any custom content here.")
+
+# ✅ Page 2: Storage & Handling (Previously "Home" Page, Pie Chart Restored)
+elif page == "Storage & Handling":
+    st.title("Storage & Handling")
+    st.subheader("Supply Chain Cost Transparency")
+
+    if uploaded_file:
+        try:
+            # 🔹 Load the selected sheet
+            df_main = pd.read_excel(xls, sheet_name=selected_sheet, header=2, dtype=str)
+            df_main.columns = df_main.columns.astype(str)
+
+            # 🔹 Ensure the dataframe has enough columns
+            total_columns = len(df_main.columns)
+            if total_columns < 116:
+                st.error(f"Expected at least 116 columns, but found {total_columns}. Please check the file format.")
+                st.stop()
+
+            # 🔹 Select specific columns for analysis
+            selected_columns = list(range(109, 115)) + [104, 105, 95, 13, 17]
+            df_selected = df_main.iloc[:, selected_columns].copy()
+
+            # 🔹 Convert CR column (Column 95) to numeric
+            cr_column = df_selected.columns[8]
+            df_selected[cr_column] = pd.to_numeric(df_selected[cr_column], errors='coerce').fillna(0)
+
+            # 🔹 Sidebar Filters
+            st.sidebar.title("Filters")
+            filters = {}
+
+            with st.sidebar.expander("🔽 Filter Data", expanded=True):
+                for column in df_selected.columns:
+                    unique_values = df_selected[column].dropna().unique()
+
+                    # Filter for Year column
+                    if "year" in column.lower():
+                        selected_year = st.selectbox(f"Filter by {column}", ["All"] + sorted(map(str, unique_values)))
+                        if selected_year != "All":
+                            filters[column] = selected_year
+
+                    # Numeric range filter
+                    elif pd.to_numeric(df_selected[column], errors='coerce').notna().all():
+                        df_selected[column] = pd.to_numeric(df_selected[column], errors='coerce')
+                        min_val, max_val = df_selected[column].min(), df_selected[column].max()
+                        if min_val != max_val:
+                            selected_range = st.slider(f"{column} Range", float(min_val), float(max_val), (float(min_val), float(max_val)))
+                            filters[column] = selected_range
+
+                    # Categorical dropdown filter
+                    elif len(unique_values) > 1:
+                        selected_value = st.selectbox(f"Filter by {column}", ["All"] + sorted(map(str, unique_values)))
+                        if selected_value != "All":
+                            filters[column] = selected_value
+
+            # 🔹 Apply filters dynamically
+            for col, val in filters.items():
+                if isinstance(val, tuple):  # Numeric range filter
+                    df_selected = df_selected[(df_selected[col] >= val[0]) & (df_selected[col] <= val[1])]
+                else:  # Categorical filter
+                    df_selected = df_selected[df_selected[col].astype(str) == val]
+
+            # 🔹 Display the filtered dataframe
+            st.success(f"Showing filtered data from sheet: **{selected_sheet}**")
+            st.dataframe(df_selected)
+
+            # 🔹 Display the sum of CR (EUR)
+            total_cr = df_selected[cr_column].sum()
+            st.write("### Data Summary:")
+            st.metric(label="Total Sum (EUR)", value=f"{total_cr:,.2f}")
+
+            # 🔹 Display the bar chart
+            month_column = df_selected.columns[9]  # Column 14 is now at index 9
+            month_order = [
+                "January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"
+            ]
+
+            df_selected[month_column] = pd.Categorical(df_selected[month_column], categories=month_order, ordered=True)
+            month_counts = df_selected[month_column].value_counts().reindex(month_order).fillna(0)
+
+            fig, ax = plt.subplots(figsize=(8, 4))
+            month_counts.plot(kind="bar", color="skyblue", ax=ax)
+            ax.set_title("PO Posting Date by Month")
+            ax.set_xlabel("Month")
+            ax.set_ylabel("Count of PO Line Items")
+            ax.set_xticklabels(month_order, rotation=45)
+            ax.grid(axis="y", linestyle="--", alpha=0.7)
+
+            # 🔹 Display the chart in Streamlit
+            st.pyplot(fig)
+
+            # ✅ Restore Pie Chart (Under Bar Chart)
+            sbe_column = df_selected.columns[7]
+            sbe_counts = df_selected[sbe_column].value_counts()
+
+            if not sbe_counts.empty:
+                fig_pie, ax_pie = plt.subplots(figsize=(6, 6))
+                ax_pie.pie(sbe_counts, labels=sbe_counts.index, autopct='%1.1f%%', colors=plt.cm.Paired.colors)
+                ax_pie.set_title("PO Lines by SBE")
+                st.pyplot(fig_pie)
+
+        except Exception as e:
+            st.error(f"Error processing data: {e}")
+
+# ✅ Page 3: Freight (Now Auto-Selecting & Displaying "GSC - Freight")
+elif page == "Freight":
+    st.title("Freight")
+    st.write("Displaying the full 'GSC - Freight' dataset and visualizations.")
+
+    if uploaded_file:
+        try:
+            # ✅ Explicitly Load "GSC - Freight" Sheet
+            if "GSC - Freight" not in sheet_names:
+                st.error("The 'GSC - Freight' sheet was not found in the uploaded file.")
+                st.stop()
+
+            df_gsc = pd.read_excel(xls, sheet_name="GSC - Freight", header=2, dtype=str, keep_default_na=False)
+            df_gsc.columns = df_gsc.columns.astype(str)
+
+            # ✅ Show currently displayed sheet in the sidebar (Without selection dropdown)
+            st.sidebar.title("Filters")
+            st.sidebar.info("📂 **Currently Displaying:** GSC - Freight")
+
+            # 🔹 Sidebar Filters (A, B, C, D)
+            filters = {}
+            filter_columns = df_gsc.columns[:4]
+
+            with st.sidebar.expander("🔽 Filter Data", expanded=True):
+                for col in filter_columns:
+                    unique_values = df_gsc[col].dropna().unique()
+                    selected_value = st.sidebar.selectbox(f"Filter by {col}", ["All"] + sorted(map(str, unique_values)))
+                    if selected_value != "All":
+                        filters[col] = selected_value
+
+            # 🔹 Apply Filters Dynamically
+            for col, val in filters.items():
+                df_gsc = df_gsc[df_gsc[col] == val]
+
+            # 🔹 Convert Numeric Columns (K & L)
+            col_k = df_gsc.columns[10]
+            col_l = df_gsc.columns[11]
+            df_gsc[col_k] = pd.to_numeric(df_gsc[col_k], errors='coerce').fillna(0)
+            df_gsc[col_l] = pd.to_numeric(df_gsc[col_l], errors='coerce').fillna(0)
+
+            # 🔹 Display Full Dataset
+            st.success(f"Displaying {df_gsc.shape[0]} rows and {df_gsc.shape[1]} columns from 'GSC - Freight'.")
+            st.dataframe(df_gsc)
+
+            # 🔹 Display "Total Freight Volume" & "Cost / KG"
+            total_freight_volume = df_gsc[col_l].sum()
+            total_kg = df_gsc[col_k].sum()
+            cost_per_kg = total_freight_volume / total_kg if total_kg > 0 else 0.00
+
+            st.subheader("Total Freight Metrics")
+            st.metric(label="Total Freight Volume (KG)", value=f"{total_freight_volume:,.2f}")
+            st.metric(label="Cost per KG", value=f"€{cost_per_kg:,.4f}")
+
+            # 🔹 Pie Chart Toggle (Region vs. Plant)
+            pie_option = st.radio("View Pie Chart by:", ["Region (C)", "Plant (D)"], horizontal=True)
+            pie_column = df_gsc.columns[2] if pie_option == "Region (C)" else df_gsc.columns[3]
+            pie_data = df_gsc.groupby(pie_column)[col_l].sum().dropna()
+
+            if not pie_data.empty:
+                fig, ax = plt.subplots(figsize=(7, 7))
+                ax.pie(pie_data, labels=[f"{c}: {v:,.0f} KG" for c, v in pie_data.items()],
+                       colors=plt.cm.Paired.colors, labeldistance=1.2)
+                ax.set_title(f"Total Freight Volume by {pie_column}")
+                st.pyplot(fig)
+
+        except Exception as e:
+            st.error(f"Error reading 'GSC - Freight' sheet: {e}")
+

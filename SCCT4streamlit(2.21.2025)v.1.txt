@@ -1,0 +1,114 @@
+import streamlit as st
+import pandas as pd
+import datetime
+import matplotlib.pyplot as plt
+
+# Title and subtitle
+st.title("SCCT4.0 Project")
+st.subheader("Supply Chain Cost Transparency")
+
+# File uploader
+uploaded_file = st.file_uploader("Upload an Excel file", type=["xlsx", "xls"])
+
+if uploaded_file is not None:
+    # Load all sheets from the Excel file
+    xls = pd.ExcelFile(uploaded_file)
+    sheet_names = xls.sheet_names  # Get list of sheet names
+
+    # Sidebar selection for sheets
+    selected_sheet = st.sidebar.selectbox("Select a sheet", sheet_names)
+
+    # Read selected sheet, using row 3 (index 2) as column headers
+    try:
+        df = pd.read_excel(xls, sheet_name=selected_sheet, header=2, dtype=str)  # Read all as text
+    except Exception as e:
+        st.error(f"Error reading the Excel sheet: {e}")
+        st.stop()
+
+    # Ensure all column names are strings
+    df.columns = df.columns.astype(str)
+
+    # Ensure the dataframe has enough columns
+    total_columns = len(df.columns)
+    if total_columns < 116:
+        st.error(f"Expected at least 116 columns, but found {total_columns}. Please check the file format.")
+        st.stop()
+
+    # Select columns by index:
+    selected_columns = list(range(109, 115)) + [104, 105, 95, 13, 17]  # Removed index 106
+
+    # Extract selected columns
+    df_selected = df.iloc[:, selected_columns].copy()
+
+    # Convert CR column (Column 95) to numeric
+    cr_column = df_selected.columns[8]  # Column 95 is now at index 8 in df_selected
+    df_selected[cr_column] = pd.to_numeric(df_selected[cr_column], errors='coerce').fillna(0)
+
+    # Sidebar Filters
+    st.sidebar.title("Filters")
+    filters = {}
+
+    with st.sidebar.expander("🔽 Filter Data", expanded=True):
+        for column in df_selected.columns:
+            unique_values = df_selected[column].dropna().unique()
+
+            # If the column is numeric, use a range slider
+            if df_selected[column].dtype in ['int64', 'float64', 'object'] and pd.to_numeric(df_selected[column], errors='coerce').notna().all():
+                min_val, max_val = df_selected[column].astype(float).min(), df_selected[column].astype(float).max()
+                selected_range = st.slider(f"{column} Range", float(min_val), float(max_val), (float(min_val), float(max_val)))
+                filters[column] = selected_range
+
+            # Otherwise, use a dropdown filter
+            elif len(unique_values) > 1:
+                selected_value = st.selectbox(f"Filter by {column}", ["All"] + sorted(map(str, unique_values)))
+                if selected_value != "All":
+                    filters[column] = selected_value
+
+    # Apply filters dynamically
+    for col, val in filters.items():
+        if isinstance(val, tuple):  # Numeric range filter
+            df_selected = df_selected[(df_selected[col].astype(float) >= val[0]) & (df_selected[col].astype(float) <= val[1])]
+        else:  # Categorical dropdown filter
+            df_selected = df_selected[df_selected[col].astype(str) == val]
+
+    # Display the filtered dataframe
+    st.success(f"Showing filtered data from sheet: **{selected_sheet}**")
+    st.dataframe(df_selected)
+
+    # Display the sum of CR (EUR)
+    total_cr = df_selected[cr_column].sum()
+    st.write("### Data Summary:")
+    st.metric(label="Total Sum (EUR)", value=f"{total_cr:,.2f}")
+
+    # Display the bar chart
+    month_column = df_selected.columns[9]  # Column 14 is now at index 9
+    month_counts = df_selected[month_column].value_counts().sort_index()
+
+    fig, ax = plt.subplots(figsize=(8, 4))
+    month_counts.plot(kind="bar", color="skyblue", ax=ax)
+    ax.set_title("PO Posting Date by Month")
+    ax.set_xlabel("Month")
+    ax.set_ylabel("Count of PO Line Items")
+    ax.grid(axis="y", linestyle="--", alpha=0.7)
+    st.pyplot(fig)
+
+    # Display the pie chart
+    sbe_column = df_selected.columns[7]  # Column 106 is now at index 7
+    sbe_counts = df_selected[sbe_column].value_counts()
+
+    if not sbe_counts.empty:
+        fig_pie, ax_pie = plt.subplots(figsize=(6, 6))
+        ax_pie.pie(sbe_counts, labels=sbe_counts.index, autopct='%1.1f%%', colors=plt.cm.Paired.colors)
+        ax_pie.set_title("PO Lines by SBE")
+        st.pyplot(fig_pie)
+
+    # Save log file
+    with open("script_log.txt", "a") as log_file:
+        log_file.write(f"Script run at {datetime.datetime.now()} | Sheet: {selected_sheet} | Total Sum (EUR): {total_cr:,.2f}\n")
+
+# Display footer image
+st.image("my_image.png", caption="Custom Footer Image", use_container_width=True)
+
+
+import os
+os.system("notepad " + __file__)  # Windows only
