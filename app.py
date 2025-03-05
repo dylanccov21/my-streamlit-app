@@ -30,9 +30,9 @@ if page == "Home":
 
     # ✅ Corrected Image Path (Use raw string or double backslashes)
     image_paths = [
-        r"C:\Users\CVGVQ\OneDrive - Covestro\Dokumente\pythonProject\TargetCost_BackPackSolution.png",
-        r"C:\Users\CVGVQ\OneDrive - Covestro\Dokumente\pythonProject\Implementation_Phase.png",
-        r"C:\Users\CVGVQ\OneDrive - Covestro\Dokumente\pythonProject\KeyProjectTasks.png"# ✅ Fixed path
+        r"TargetCost_BackPackSolution.png",
+        r"Implementation_Phase.png",
+        r"KeyProjectTasks.png"# ✅ Fixed path
     ]
 
     # ✅ Display images using `use_container_width`
