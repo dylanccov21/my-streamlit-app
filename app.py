@@ -30,7 +30,6 @@ if page == "Home":
 
     # ✅ Corrected Image Path (Use raw string or double backslashes)
     image_paths = [
-        r"TargetCost_BackPackSolution.png",
         r"Implementation_Phase.png",
         r"KeyProjectTasks.png"# ✅ Fixed path
     ]
