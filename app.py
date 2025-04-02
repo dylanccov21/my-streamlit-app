@@ -4,9 +4,13 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import plotly.graph_objects as go
 import plotly.express as px
+import tensorflow as ts
+import numpy as np
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import LSTM, Dense
 
 st.sidebar.title("Navigation")
-page = st.sidebar.radio("Go to", ["Home", "Storage & Handling", "Freight"])
+page = st.sidebar.radio("Go to", ["Home", "Storage & Handling", "Freight","ML Test"])
 
 # ✅ Declare file uploader first to avoid NameError
 uploaded_file = st.sidebar.file_uploader("Upload an Excel file", type=["xlsx", "xls"])
@@ -47,17 +51,21 @@ elif page == "Storage & Handling":
     if uploaded_file:
         try:
             # ✅ Only show sheet selection in Storage & Handling
+            default_sheet = "Total Result"
             excluded_sheets = ["GSC - Freight"]
-            available_sheets = [sheet for sheet in sheet_names if sheet not in excluded_sheets]
 
-            if not available_sheets:
-                st.error("No valid sheets available. Please upload an Excel file with the correct format.")
+            if default_sheet in excluded_sheets:
+                st.error(f'The default sheet "{default_sheet}" is excluded. Please check the configuration.')
                 st.stop()
 
-            selected_sheet = st.sidebar.selectbox("Select a sheet", available_sheets)
+            # You can still validate if the sheet exists in the uploaded Excel file (optional)
+            if default_sheet not in sheet_names:
+                st.error(f'Sheet "{default_sheet}" not found in the Excel file.')
+                st.stop()
 
+            selected_sheet = default_sheet
             # 🔹 Load the selected sheet
-            df_main = pd.read_excel(xls, sheet_name=selected_sheet, header=2, dtype=str)
+            df_main = pd.read_excel(xls, sheet_name=selected_sheet, header=0, dtype=str)
             df_main.columns = df_main.columns.astype(str)
 
             # 🔹 Continue with Storage & Handling processing...
@@ -68,12 +76,17 @@ elif page == "Storage & Handling":
                 st.stop()
 
             # 🔹 Select specific columns for analysis
-            selected_columns = list(range(109, 115)) + [104, 105, 95, 13, 17]
+            selected_columns = [10] + list(range(109, 115)) + [104, 105, 95, 13, 17]
             df_selected = df_main.iloc[:, selected_columns].copy()
+            # Optional: Clean column 11 (index 10) more gently
+            region_column = df_selected.columns[0]
+            df_selected[region_column] = df_selected[region_column].fillna("NA")
 
             # 🔹 Convert CR column (Column 95) to numeric
-            cr_column = df_selected.columns[8]
+            cr_column = df_selected.columns[9]
             df_selected[cr_column] = pd.to_numeric(df_selected[cr_column], errors='coerce').fillna(0)
+
+
 
             # 🔹 Sidebar Filters
             st.sidebar.title("Filters")
@@ -170,7 +183,7 @@ elif page == "Storage & Handling":
             line_data = df_freight.groupby(col_j)[col_l].sum().sort_index()
 
             # ✅ Define Correct Month Order for Bar Chart
-            month_column = df_selected.columns[9]  # Column 14 in original dataset
+            month_column = df_selected.columns[10]  # Column 14 in original dataset
             month_order = [
                 "January", "February", "March", "April", "May", "June",
                 "July", "August", "September", "October", "November", "December"
@@ -349,3 +362,153 @@ elif page == "Freight":
 
         except Exception as e:
             st.error(f"Error reading 'GSC - Freight' sheet: {e}")
+
+if page == "ML Test":
+    st.title("📊 Storage Cost Prediction using TensorFlow")
+
+    if uploaded_file:
+        try:
+            selected_sheet = st.sidebar.selectbox("Select a sheet for cost prediction", sheet_names)
+            df = pd.read_excel(uploaded_file, sheet_name=selected_sheet, header=2, dtype=str)
+
+            st.write("### First 10 Rows of Uploaded Data (Raw)")
+            st.dataframe(df.head(10))
+
+            month_column = "Posting period"
+            cost_column = "EUR"
+
+            if month_column not in df.columns or cost_column not in df.columns:
+                st.error(f"Columns '{month_column}' and '{cost_column}' not found! Please check column names.")
+                st.stop()
+
+            month_mapping = {
+                "January": 1, "February": 2, "March": 3, "April": 4,
+                "May": 5, "June": 6, "July": 7, "August": 8,
+                "September": 9, "October": 10, "November": 11, "December": 12
+            }
+
+            df[month_column] = df[month_column].replace(month_mapping)
+            df[month_column] = pd.to_numeric(df[month_column], errors="coerce")
+            df[cost_column] = pd.to_numeric(df[cost_column], errors="coerce")
+
+            df.dropna(subset=[month_column, cost_column], inplace=True)
+
+            # Group by month and sum total cost per month
+            monthly_data = df.groupby(month_column)[cost_column].sum().reset_index()
+            monthly_data = monthly_data.sort_values(by=month_column)
+
+            # ✅ Debugging Step: Show aggregated data
+            st.write("### Aggregated Monthly Data (Total Cost Per Month)")
+            st.dataframe(monthly_data)
+
+            # Remove outliers: negative line item quantities
+            monthly_data = monthly_data[monthly_data[cost_column] >= 0]
+
+            # Extract numeric values
+            months = monthly_data[month_column].values.astype(int)
+            total_monthly_costs = monthly_data[cost_column].values.astype(float)
+
+            # ✅ Ensure we have at least 12 months
+            if len(total_monthly_costs) != 12:
+                st.error(f"Data must contain exactly 12 months. Found: {len(total_monthly_costs)}.")
+                st.stop()
+
+            # Prepare LSTM training data
+            X_train = np.array([total_monthly_costs])  # Use all 12 months as input
+            y_train = np.array([total_monthly_costs[-1]])  # Predict the next month's cost
+
+            # ✅ Debugging Step: Check shapes
+            st.write(f"X_train shape: {X_train.shape}, y_train shape: {y_train.shape}")
+
+            # Reshape input for LSTM
+            X_train = X_train.reshape(X_train.shape[0], X_train.shape[1], 1)
+
+            model = Sequential([
+                LSTM(50, activation='relu', return_sequences=True, input_shape=(12, 1)),
+                LSTM(25, activation='relu'),
+                Dense(1)
+            ])
+            model.compile(optimizer='adam', loss='mse')
+            model.fit(X_train, y_train, epochs=100, verbose=0)
+
+            num_months = st.slider("Months to Predict", 1, 12, 12)
+
+            # Predict future total monthly costs
+            latest_data = total_monthly_costs.reshape(1, 12, 1)
+            predicted_costs = []
+
+            for i in range(num_months):
+                prediction = model.predict(latest_data)
+
+                if prediction.shape != (1, 1):
+                    st.error(f"Unexpected prediction shape: {prediction.shape}. Stopping execution.")
+                    st.stop()
+
+                predicted_value = max(750000, float(prediction[0][0]))  # ✅ Clamp negative values
+                predicted_costs.append(predicted_value)
+                latest_data = np.roll(latest_data, -1, axis=1)
+                latest_data[0, -1, 0] = prediction[0][0]
+
+            # Generate future months extending from last historical month
+            last_month = months[-1]
+            future_months = [(last_month + i) % 12 or 12 for i in range(1, num_months + 1)]
+            month_names = ["January", "February", "March", "April", "May", "June",
+                           "July", "August", "September", "October", "November", "December"]
+            future_labels = [month_names[m - 1] for m in future_months]
+
+            future_month_numbers = np.arange(months[-1] + 1, months[-1] + num_months + 1)
+
+            # Plot Predictions
+            fig, ax = plt.subplots(figsize=(8, 4))
+            ax.plot(months, total_monthly_costs, label="Historical Total Costs", marker='o', color='blue')
+            ax.plot(future_month_numbers, predicted_costs, label="Predicted Total Costs", marker='o', linestyle="dashed", color='red')
+            ax.set_title("Storage Cost Predictions")
+            ax.set_xlabel("Month")
+            ax.set_ylabel("Cost (€)")
+            ax.set_xticks(np.concatenate([months, future_month_numbers]))
+            ax.set_xticklabels(list(month_names[m - 1] for m in months) + future_labels, rotation=45)
+            ax.legend()
+            st.pyplot(fig)
+
+            # Display Predictions in a Table
+            st.write("### Predicted Storage Costs (€)")
+            predicted_df = pd.DataFrame({"Month": future_labels, "Predicted Cost": predicted_costs})
+            st.dataframe(predicted_df)
+
+            # 🔹 Add manual feedback section
+            st.write("### Provide Feedback on Prediction")
+            feedback = st.selectbox(
+                "Does the prediction seem accurate?",
+                ["Accurate", "Too High", "Too Low"]
+            )
+
+            # 🔹 Rerun Button to adjust predictions
+            if st.button("Rerun Model with Adjustment"):
+                correction_factor = 1.0
+
+                if feedback == "Too High":
+                    correction_factor = 0.9  # Reduce predictions by 10%
+                elif feedback == "Too Low":
+                    correction_factor = 1.1  # Increase predictions by 10%
+
+                predicted_costs = [cost * correction_factor for cost in predicted_costs]
+
+                # 🔹 Display adjusted results
+                fig, ax = plt.subplots(figsize=(8, 4))
+                ax.plot(months, total_monthly_costs, label="Historical Total Costs", marker='o', color='blue')
+                ax.plot(future_month_numbers, predicted_costs, label="Adjusted Predicted Costs", marker='o', linestyle="dashed", color='green')
+                ax.set_title("Storage Cost Predictions (Adjusted)")
+                ax.set_xlabel("Month")
+                ax.set_ylabel("Cost (€)")
+                ax.set_xticks(np.concatenate([months, future_month_numbers]))
+                ax.set_xticklabels(list(month_names[m - 1] for m in months) + future_labels, rotation=45)
+                ax.legend()
+                st.pyplot(fig)
+
+                st.write("### Adjusted Predicted Storage Costs (€)")
+                adjusted_df = pd.DataFrame({"Month": future_labels, "Adjusted Cost": predicted_costs})
+                st.dataframe(adjusted_df)
+
+        except Exception as e:
+            st.error(f"Error processing file: {e}")
+
